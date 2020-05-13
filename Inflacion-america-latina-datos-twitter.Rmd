@@ -1,0 +1,95 @@
+---
+title: "Inflacion America latina, datos Twitter"
+author: "Data Research"
+by: Elker Chulde
+date: "11/5/2020"
+output: html_document
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+```
+
+## R Markdown
+
+This is an R Markdown document. Markdown is a simple formatting syntax for authoring HTML, PDF, and MS Word documents. For more details on using R Markdown see <http://rmarkdown.rstudio.com>.
+
+## Investigacion social media
+
+Los contenidos generados en las redes sociales son producidos y recopilados por por usuarios individuales (o representeantes de organizaciones) que participan en plataformas de acceso público tales como Twitter, Facebook, o Instagram.
+
+## Conectando R a Twitter
+
+Para acceder a los sistemas de Twitter necesitamos obtener una autorización, identificándonos con nuestro usuario en la red, accediendo por medio de una cuenta de desarrollador, tramite que se realiza para obtener acceso a una serie de codigos de identificacion conocidos en su conjunto como API keys.
+
+## Paquete (rtweet)
+A coninuacion.
+
+```{r }
+library(rtweet)
+library(tidyverse)
+
+## En esta ocasion el nombre de nuestra app.
+
+appname <- "Prueba data R"
+
+## A continuacion procedemos a insertar las llaves de acceso, cabe mencionar que si deseas acceder con los codigos de acceso mostrados, no lo podras hacer debido a que las API keys ya fueron actualizadas.
+
+consumer_key <- "gZGcvRLbaenrzt5yP7xQxdjXt"
+## consumer secret 
+consumer_secret <- "ri8IOLNbSXD5Ksxi8YuAZDOlBZzxuqtsgG1EhCGV7cZJQgnArH"
+## consumer key 
+access_token <- "1257133503365464065-smsYh5reG1nHy6DYW5zrbFlsHn72hG"
+## consumer secret 
+access_secret <- "nIChlbvehYe6CqruiXwQ9UfNJ2cJ9wrCW8q20qgYXmwto"
+
+## Procedemos a insertar codigo.
+
+twitter_token <- create_token(
+  app = appname,
+  consumer_key = consumer_key,
+  consumer_secret = consumer_secret,
+  access_token = access_token, 
+  access_secret = access_secret)
+
+## Recuerda no propasar el limite legal que twiitter brinda en la recoleccion de datos. En este caso buscamos una n= 3000 de tweets, con la palbra "inflacion".
+
+tweets <- search_tweets(q = "inflacion", n = 3000)
+users_data(tweets) %>% head()
+names(tweets)
+options(scipen = 20)
+ggplot(tweets) +
+  geom_histogram(aes(x = followers_count))
+tweets %>% 
+  top_n(5, followers_count) %>% 
+  arrange(desc(followers_count)) %>% 
+  select(screen_name, followers_count, location, text)
+ggplot(filter(tweets, !is_retweet))+
+  geom_histogram(aes(x = retweet_count))
+
+tweets %>% 
+  filter(!is_retweet) %>% 
+  filter(retweet_count == max(retweet_count)) %>% 
+  select(screen_name, retweet_count, followers_count, location, text)
+
+tweets %>%
+  filter(location != "", !is.na(location)) %>% 
+  count(location) %>% 
+  top_n(10, n) %>% 
+  ggplot() +
+  geom_col(aes(x = reorder(location, n), y = n)) + 
+  coord_flip() +
+  labs(title = "Procedencia de los usuarios",
+       x = "ubicación",
+       y = "cantidad")
+```
+
+## Including Plots
+
+You can also embed plots, for example:
+
+```{r pressure, echo=FALSE}
+plot(pressure)
+```
+
+Note that the `echo = FALSE` parameter was added to the code chunk to prevent printing of the R code that generated the plot.
